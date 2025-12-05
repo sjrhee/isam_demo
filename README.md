@@ -256,6 +256,12 @@ cd /app/data
 
 ---
 
+## 🔗 관련 프로젝트
+
+- **[C-ISAM Test](https://github.com/sjrhee/isam_test)**: C-ISAM 기능 테스트 및 검증을 위한 프로젝트
+
+---
+
 ## 📝 라이선스
 
 이 프로젝트는 교육 및 데모 목적으로 제공됩니다.
