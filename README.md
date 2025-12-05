@@ -186,7 +186,7 @@ make help         # 도움말 표시
 
 ### 로컬 컴파일
 
-- **OS**: Linux (Ubuntu/Debian 권장)
+- **OS**: Linux (RedHat 8 권장)
 - **컴파일러**: GCC
 - **라이브러리**: C-ISAM 라이브러리 (포함됨)
 - **Make**: GNU Make
