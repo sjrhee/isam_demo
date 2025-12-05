@@ -17,14 +17,11 @@ Docker를 사용하면 환경 설정 없이 바로 실행할 수 있습니다.
 # 1. Docker 이미지 빌드
 ./docker/build.sh
 
-# 2. 프로그램 실행
-./docker/run.sh bld_file    # 파일 시스템 생성
-./docker/run.sh add_indx    # 인덱스 추가
-./docker/run.sh add_rcrd    # 레코드 추가
-./docker/run.sh sqntl_rd    # 데이터 조회
+# 2. 자동 데모 실행 (전체 시나리오)
+./docker/run.sh
 
-# 3. 대화형 셸
-./docker/run.sh shell
+# 3. 대화형 셸 (수동 실행)
+docker run -it --rm -v $(pwd)/docker/data:/app/data cisam-demo /bin/bash
 ```
 
 **상세 가이드**: [docker/README.md](docker/README.md)  
@@ -63,9 +60,7 @@ CISAM/
 │   ├── Dockerfile               # Docker 이미지 정의
 │   ├── build.sh                 # 이미지 빌드 스크립트
 │   ├── run.sh                   # 컨테이너 실행 스크립트
-│   ├── docker-compose.yml       # Docker Compose 설정
-│   ├── README.md                # Docker 상세 가이드
-│   └── QUICKSTART.md            # Docker 빠른 참조
+│   └── README.md                # Docker 상세 가이드
 ├── include/                      # 헤더 파일
 │   ├── isam.h                   # C-ISAM 헤더
 │   └── decimal.h                # Decimal 타입 헤더
@@ -133,35 +128,34 @@ make help         # 도움말 표시
 ---
 
 ## 🐳 Docker 사용법
+ 
+ ### 1. 자동 데모 실행
+ 
+ ```bash
+ # 이미지 빌드
+ ./docker/build.sh
+ 
+ # 데모 시나리오 자동 실행
+ ./docker/run.sh
+ ```
+ - `run.sh`는 `docker/auto_demo.sh`에 정의된 시나리오를 순차적으로 실행합니다.
+ - 실행 결과 데이터는 호스트의 `docker/data` 폴더에 저장됩니다.
+ 
+ ### 2. 대화형 실행 (수동 조작)
+ 
+ 컨테이너 내부 셸로 접속하여 개별 프로그램을 직접 실행해볼 수 있습니다.
+ 
+ ```bash
+ # 컨테이너 셸 접속
+ docker run -it --rm -v $(pwd)/docker/data:/app/data cisam-demo /bin/bash
+ 
+ # 컨테이너 내부에서 프로그램 실행
+ cd /app/demo/build
+ ./bld_file
+ ./add_rcrd
+ ```
+ 
 
-### 기본 사용
-
-```bash
-# 이미지 빌드
-./docker/build.sh
-
-# 프로그램 실행
-./docker/run.sh <program_name>
-
-# 예제
-./docker/run.sh bld_file
-./docker/run.sh add_rcrd
-./docker/run.sh sqntl_rd
-```
-
-### Docker Compose
-
-```bash
-# 컨테이너 시작
-cd docker
-docker-compose up -d
-
-# 컨테이너 접속
-docker-compose exec cisam-demo /bin/bash
-
-# 컨테이너 중지
-docker-compose down
-```
 
 ### 상세 가이드
 
@@ -200,7 +194,6 @@ docker-compose down
 ### Docker 사용
 
 - **Docker**: 20.10 이상
-- **Docker Compose**: 1.29 이상 (선택사항)
 - **OS**: Linux, macOS, Windows (WSL2)
 
 ---
@@ -225,31 +218,32 @@ docker-compose down
 
 ## 🎯 사용 예제
 
-### 시나리오 1: 초기 설정 및 데이터 입력
-
-```bash
-# Docker 사용
-./docker/run.sh shell
-
-# 컨테이너 내부에서
-cd /app/data
-/app/demo/build/bld_file      # 파일 시스템 생성
-/app/demo/build/add_indx      # 인덱스 추가
-/app/demo/build/add_rcrd      # 직원 추가 (대화형)
-/app/demo/build/sqntl_rd      # 데이터 확인
-```
-
-### 시나리오 2: 데이터 조회
-
-```bash
-./docker/run.sh sqntl_rd
-```
-
-### 시나리오 3: 전체 워크플로우
-
-```bash
-./docker/run.sh all
-```
+### 시나리오 1: 초기 설정 및 데이터 입력 (수동)
+ 
+ ```bash
+ # Docker 대화형 셸 접속
+ docker run -it --rm -v $(pwd)/docker/data:/app/data cisam-demo /bin/bash
+ 
+ # 컨테이너 내부에서
+ cd /app/data
+ /app/demo/build/bld_file      # 파일 시스템 생성
+ /app/demo/build/add_indx      # 인덱스 추가
+ /app/demo/build/add_rcrd      # 직원 추가 (대화형)
+ /app/demo/build/sqntl_rd      # 데이터 확인
+ ```
+ 
+ ### 시나리오 2: 데이터 조회
+ 
+ ```bash
+ # 컨테이너 내부에서 실행
+ /app/demo/build/sqntl_rd
+ ```
+ 
+ ### 시나리오 3: 전체 워크플로우 (자동)
+ 
+ ```bash
+ ./docker/run.sh
+ ```
 
 ---
 
