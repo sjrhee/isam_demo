@@ -28,7 +28,7 @@ Docker를 사용하면 환경 설정 없이 바로 실행할 수 있습니다.
 ```
 
 **상세 가이드**: [docker/README.md](docker/README.md)  
-**빠른 참조**: [docker/QUICKSTART.md](docker/QUICKSTART.md)
+
 
 ### 방법 2: 로컬 컴파일
 
@@ -166,7 +166,7 @@ docker-compose down
 ### 상세 가이드
 
 - **Docker 상세 가이드**: [docker/README.md](docker/README.md)
-- **빠른 참조**: [docker/QUICKSTART.md](docker/QUICKSTART.md)
+
 
 ---
 
@@ -184,10 +184,7 @@ docker-compose down
   - 데이터 영속성 관리
   - 문제 해결
 
-- **[docker/QUICKSTART.md](docker/QUICKSTART.md)**: Docker 빠른 참조
-  - 자주 사용하는 명령어
-  - 일반적인 워크플로우
-  - 치트시트
+
 
 ---
 
@@ -256,9 +253,9 @@ cd /app/data
 
 ---
 
-## 🔗 관련 프로젝트
+## 🔗 관련 테스트
 
-- **[C-ISAM Test](https://github.com/sjrhee/isam_test)**: C-ISAM 기능 테스트 및 검증을 위한 프로젝트
+- **[C-ISAM Test](https://github.com/sjrhee/isam_test)**: C-ISAM 기능 테스트 및 검증을 위한 테스트
 
 ---
 
