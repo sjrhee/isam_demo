@@ -1,0 +1,19 @@
+# Libraries
+lib/
+
+# Compiled Object files
+*.o
+*.obj
+
+# Compiled Executables
+demo/build/
+
+# Data files
+*.dat
+*.idx
+docker/data/
+
+# Editor files
+.vscode/
+.idea/
+*.swp
