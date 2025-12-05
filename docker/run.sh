@@ -17,6 +17,7 @@ echo ""
 # -v $SCRIPT_DIR/data:/app/data : 데이터 영속성 및 공유
 # -v $SCRIPT_DIR/auto_demo.sh:/app/auto_demo.sh : 스크립트 수정 편의성
 docker run -it --rm \
+  -u "$(id -u):$(id -g)" \
   -v "$SCRIPT_DIR/data":/app/data \
   -v "$SCRIPT_DIR/auto_demo.sh":/app/auto_demo.sh \
   cisam-demo \

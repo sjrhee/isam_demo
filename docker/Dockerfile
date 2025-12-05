@@ -16,6 +16,7 @@ RUN dnf install -y \
     gcc-c++ \
     make \
     glibc-devel \
+    shadow-utils \
     && dnf clean all
 
 # Copy necessary source files
@@ -32,6 +33,13 @@ RUN make clean && make all
 
 # Create a directory for ISAM data files
 RUN mkdir -p /app/data
+
+# Create a non-root user and set permissions
+RUN useradd -m -s /bin/bash cisam && \
+    chown -R cisam:cisam /app
+
+# Switch to non-root user
+USER cisam
 
 # Set the data directory as working directory for runtime
 WORKDIR /app/data

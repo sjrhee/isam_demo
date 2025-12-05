@@ -21,7 +21,7 @@ Docker를 사용하면 환경 설정 없이 바로 실행할 수 있습니다.
 ./docker/run.sh
 
 # 3. 대화형 셸 (수동 실행)
-docker run -it --rm -v $(pwd)/docker/data:/app/data cisam-demo /bin/bash
+docker run -it --rm -u "$(id -u):$(id -g)" -v $(pwd)/docker/data:/app/data cisam-demo /bin/bash
 ```
 
 **상세 가이드**: [docker/README.md](docker/README.md)  
@@ -147,7 +147,7 @@ make help         # 도움말 표시
  
  ```bash
  # 컨테이너 셸 접속
- docker run -it --rm -v $(pwd)/docker/data:/app/data cisam-demo /bin/bash
+ docker run -it --rm -u "$(id -u):$(id -g)" -v $(pwd)/docker/data:/app/data cisam-demo /bin/bash
  
  # 컨테이너 내부에서 프로그램 실행
  cd /app/demo/build
@@ -222,7 +222,7 @@ make help         # 도움말 표시
  
  ```bash
  # Docker 대화형 셸 접속
- docker run -it --rm -v $(pwd)/docker/data:/app/data cisam-demo /bin/bash
+ docker run -it --rm -u "$(id -u):$(id -g)" -v $(pwd)/docker/data:/app/data cisam-demo /bin/bash
  
  # 컨테이너 내부에서
  cd /app/data
