@@ -3,33 +3,53 @@
 # =============================================================================
 # This Dockerfile builds a containerized environment for running C-ISAM
 # (Indexed Sequential Access Method) demo programs.
+# Uses multi-stage build to keep the final image small.
 # =============================================================================
 
-FROM rockylinux:8
+# =============================================================================
+# Stage 1: Build
+# =============================================================================
+FROM rockylinux:8 AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Install required packages
+# Install required packages for building
 RUN dnf install -y \
     gcc \
     gcc-c++ \
     make \
     glibc-devel \
-    shadow-utils \
     && dnf clean all
 
 # Copy necessary source files
-COPY ../demo/src /app/demo/src
-COPY ../include /app/include
-COPY ../lib /app/lib
-COPY ../Makefile /app/Makefile
-
-# Create build directory
-RUN mkdir -p /app/demo/build
+# Note: Context is expected to be the project root
+COPY demo/src /app/demo/src
+COPY include /app/include
+COPY lib /app/lib
+COPY Makefile /app/Makefile
 
 # Compile all ISAM programs
 RUN make clean && make all
+
+# =============================================================================
+# Stage 2: Runtime
+# =============================================================================
+FROM rockylinux:8
+
+# Set working directory
+WORKDIR /app
+
+# Install required runtime packages
+RUN dnf install -y \
+    shadow-utils \
+    && dnf clean all
+
+# Copy compiled executables from builder stage
+COPY --from=builder /app/demo/build /app/demo/build
+
+# Copy libraries (needed for runtime if dynamic linking is used)
+COPY --from=builder /app/lib /app/lib
 
 # Create a directory for ISAM data files
 RUN mkdir -p /app/data
