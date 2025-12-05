@@ -1,0 +1,478 @@
+                      =================================
+                            DOCUMENTATION NOTES
+                                   FOR 
+                     C-ISAM Programmer's Manual 7.20
+                     Software Release Version 7.26.FC3
+                               DATE: 11 Jun 2008 
+                      ================================= 
+
+Table of Contents
+=================
+
+I.    Overview of IBM Informix C-ISAM Programmer's Manual
+
+II.   Documentation Notes and Errata
+
+        ====================================
+
+I.    Overview of IBM Informix C-ISAM Programmer's Manual
+
+C-ISAM is an indexed sequential access method that IBM Informix
+has defined and implemented in the C language. This file 
+describes the 7.20 C-ISAM Programmer's Manual and its known 
+errata.  It also identifies feature and performance topics 
+that are not covered in the manual, or for which the behavior 
+of this version of C-ISAM differs from descriptions in the 
+manual.  This file contains vital information on C-ISAM 
+application and performance issues.
+ 
+See also the Release Notes that are provided with C-ISAM 7.26.
+
+        ====================================
+ 
+II.  Documentation Notes and Errata
+ 
+The C-ISAM Programmer's Manual describes how to use C-ISAM, 
+how to define and use indexes and B+ trees, data types,
+locking, transaction management, and additional facilities.  
+Programming examples and individual descriptions of all of 
+the C-ISAM library functions for file manipulation, format 
+conversion, and format manipulation are also provided.
+Appendices describe the bcheck utility, Global Language
+Support (GLS), error codes, file formats, selected topics 
+in system administration, and header files.
+
+
+New Upper Limits on File Size for This Release
+----------------------------------------------
+"New Features of This Product" on page 6 of the Introduction 
+describes features that were new to Version 7.20 of C-ISAM.  
+Version 7.26 has increased theoretical limits on file sizes.
+(Your actual limits might be lower, if your platform cannot
+read large files, or is constrained by available hardware.)
+
+In the following table, values are in bytes, and "PREVIOUS
+LIMIT" refers to C-ISAM Version 7.24 and earlier.  As a 
+comparison, the term "gigabyte" usually denotes 2^30 bytes.
+
+TYPE OF C-ISAM FILE            7.26 LIMIT    PREVIOUS LIMIT
+===================            ==========    ==============
+Fixed-Length Records
+  Maximum data file size:      (2^40) - 1     (2^31) - 1
+  Maximum index file size:     (2^40) - 1     (2^31) - 1
+
+Variable-Length Records
+  Maximum data file size:      (2^40) - 1     (2^31) - 1
+  Maximum index file size:     (2^34) - 1     (2^31) - 1
+
+Maximum transaction file size: (2^63) - 1     (2^31) - 1
+Maximum audit trail file size: (2^63) - 1     (2^31) - 1
+ 
+Here the maximum data and index file sizes for fixed-length 
+and variable-length records are based on a NODESIZE of 512 
+bytes. These values double for a 1024 byte NODESIZE.
+
+Values in the "7.26 LIMIT" column above are for 64-bit 
+platforms, and for 32-bit platforms that can use special 
+APIs that the Machine Notes file describes.  On 32-bit 
+platforms that do not support special APIs for accessing 
+large files, the "PREVIOUS LIMIT" values continue to apply.
+
+
+The bcheck Utility
+------------------
+The diagram on page 11 of the Introduction, illustrating 
+notational conventions of syntax diagrams, contains an error.  
+The "V" term near the bottom of the diagram should not be 
+in italic font, because it is a literal, not a variable. 
+(For the correct syntax of bcheck, see page A-2.)
+
+The use of versions of the bcheck utility (and of the dblog
+utility) that were provided with C-ISAM Version 7.24 or 
+earlier is not supported for files created by this release.  
+Similarly, the use of versions of bcheck or dblog that were
+provided with INFORMIX-SE Version 7.24 or earlier is not
+supported for files created with this release of C-ISAM.
+
+
+The isflush() Function
+----------------------
+If the argument of isflush() is the descriptor of a file that was 
+opened in ISINPUT mode, error -101 ("ENOTOPEN") is returned.  
+Use isflush() only with files that isopen() or isbuild() opened 
+in ISOUTPUT or ISINOUT mode.  
+
+The description of error -101 on page C-5 states:
+
+   "An attempt was made to perform some operation on a C-ISAM 
+    file that was not previously opened using the isopen call," 
+
+This neglects the fact that the wrong access mode in an 
+otherwise successful isopen() call can elicit this error.
+
+
+The islogopen() Function
+------------------------
+If the argument of islogopen() points to a file that is not
+empty, but whose format does not match what the section "New 
+Transaction Log File Format" describes later in this document, 
+then C-ISAM issues error -21502, and no file is opened.  You 
+cannot use this version of C-ISAM with transaction log files 
+that were created by Version 7.24 (or earlier) of C-ISAM.
+ 
+
+The isindexinfo(), isdictinfo(), and iskeyinfo() Functions
+----------------------------------------------------------
+Page 8-35 shows the prototype of isindexinfo() as:
+
+  int    isindexinfo(isfd, buffer, number)
+         int isfd;
+         struct keydesc *buffer;
+         int number; 
+
+Here the second argument ("buffer") depends on the third 
+argument: ("number") in the following way:
+
+ o  The "buffer" argument should be a pointer to a "keydesc" 
+    structure if the third argument is greater than zero.  
+
+ o  The "buffer" argument should be a pointer to a "dictinfo"
+    structure if the third argument is zero.  
+
+The third argument must never be negative.  Any other type 
+for the the second argument is an error, but neither the C 
+compiler nor the C-ISAM library can detect this.  
+
+If "number" has zero as its value, the "buffer" argument can 
+also be a pointer to a "dictinfo" structure, but in this case, 
+a compilation error from a prototype mismatch can result.
+
+In this release, this issue has been resolved as follows:
+
+ o To maintain compatibility with existing C-ISAM applications,
+   the prototype of isindexinfo() has been changed to this:
+
+    int    isindexinfo(int isfd, void *buffer, int number);
+
+ o Two new file manipulation functions have been provided with 
+   the following prototypes in the isam.h file:
+
+    int    isdictinfo(int isfd, struct dictinfo *buffer);
+    int    iskeyinfo(int isfd, struct keydesc *buffer, int number);
+
+ o Function isindexinfo() internally calls isdictinfo() if the
+   value of "number" is zero;  it calls iskeyinfo() if the value 
+   of "number" is greater than zero.  
+
+Version 7.26 applications can call isdictinfo() and iskeyinfo() 
+directly.  In new C-ISAM applications, use the new isdictinfo() 
+and iskeyinfo() functions, rather than isindexinfo(), which 
+C-ISAM retains only for backwards compatability with legacy
+applications and compliance with X/Open Group XPG3 standards.
+(The subsequent XPG4 standard supersedes XPG3, but does not
+standardize the indexed sequential access method.)
+
+
+The isrelease() Function
+------------------------
+After releasing all locks on records, as described on 
+page 8-51, isrelease() also unlocks the open file 
+descriptor that its argument specifies.
+
+
+The lddblnull() and ldfltnull() Functions
+-----------------------------------------
+The functions lddblnull(), as described on page 8-73, and 
+ldfltnull(), as described on page 8-77, do not behave correctly 
+unless the isam/isam.h header file is included. (This is
+because these two functions can be implemented as macros.)
+
+The prototype for ldfltnull() has changed from previous release.
+The legacy prototype was :
+double ldfltnull(char *location, short *nullflag);
+This has been changed to :
+float ldfltnull(char *location, short *nullflag);
+
+
+The stchar() Function Prototype
+------------------------------- 
+On page 8-80, the semicolon (;) terminator appears erroneously at
+the end of the first line of the stchar() function prototype:
+
+     void stchar(cstr,fstr,length);
+
+This is a typographic error. Delete the semicolon.
+       
+
+New Error Messages
+------------------
+Appendix C does not include two error messages that are present
+in the  Version 7.26 of C-ISAM.
+
+ ERROR      DESCRIPTION AND POSSIBLE CAUSE
+=======    ================================
+ -26061    ISAM error: Cannot write. Maximum node number has been reached.
+
+ -26062    ISAM error: Cannot write. Btree limit has been reached.
+
+
+These errors are defined in the isam.h file:
+
+           #define ENODEFULL     26061
+           #define ETREEFULL     26062
+
+(These new error codes are outside the numeric range of other
+ISAM and RSAM errors because no more unassigned numbers are
+available within the traditional range.)
+
+
+
+New Transaction Log File Format
+-------------------------------
+Pages D-9 and following of "C-ISAM Programmer's Manual"
+describe the transaction log file format for C-ISAM 7.24 
+and earlier versions. Version 7.26 contains several 
+changes to the legacy format of transaction log files.
+
+o  A "magic number" now begins each transaction log file.
+   C-ISAM uses this number to recognize a valid transaction 
+   log.  This prevents this version of C-ISAM from writing
+   in a transaction log that had also been written by an 
+   earlier version. (If a log file included records in 
+   both the old and new formats, it could not be read by 
+   any C-ISAM version, and would be useless for purposes 
+   of recovery.)
+
+o  The LG_XID transaction ID is increased to 4 bytes
+   (from 2 bytes in Version 7.24 and earlier releases).  
+
+o  The LG_PREV offset of the previous log record is now
+   increased to 8 bytes (from 4 bytes in earlier versions).
+   This supports log files larger than 2^31 - 1 bytes
+   for 64-bit platforms and for some 32-bit platforms.
+
+o  The LG_PREVLEN offset of the previous log length is
+   now defined as:
+                    LG_PREV+sizeof(IFMX_OFF_T)
+
+   Here the value of the right-hand addend is platform-
+   dependent:
+
+   o  It is 8 bytes on 64-bit platforms or 32-bit 
+      platforms that can read large files.
+
+   o  It is 4 bytes on 32-bit platforms that cannot
+      read files larger than 2^31 - 1 bytes.
+
+The transaction file format in Appendix D is difficult to 
+read, because the text does not display some whitespace 
+that separates tokens within lines.  The following code,
+however, shows the new format for this C-ISAM release:
+
+--------------------------------------------------------
+
+/* Log file Magic number        */
+ 
+#define LG_MAGIC_NUM             0xFB859E78
+#define LG_MAGIC_LEN             4
+ 
+/* log record offset definition */
+ 
+
+/* record header definition */
+#define LG_LEN		0			/* current record length */
+#define LG_TYPE		LG_LEN+INTSIZE		/* log record type */
+#define LG_XID		LG_TYPE+INTSIZE	        /* transaction id */
+#define LG_USER		LG_XID+LONGSIZE		/* user name */
+#define LG_TIME		LG_USER+INTSIZE		/* transaction time */
+#define LG_PREV		LG_TIME+LONGSIZE        /* previous log record */
+#define LG_PREVLEN	LG_PREV+sizeof(IFMX_OFF_T) /* previous log length */
+
+
+/* BEGIN, COMMIT and ROLLBACK WORK record definition */
+#define LG_TXSIZE	LG_PREVLEN+INTSIZE+INTSIZE  /* record size */
+
+/* build file record definition */
+#define LG_FMODE	LG_PREVLEN+INTSIZE	/* build mode */
+#define LG_RECLEN	LG_FMODE+INTSIZE	/* minimum record length */
+#define LG_MAXLEN	LG_RECLEN+INTSIZE	/* max record length, or zero */
+#define LG_KFLAGS	LG_MAXLEN+INTSIZE	/* key flag */
+#define LG_NPARTS	LG_KFLAGS+INTSIZE	/* number of key parts */
+#define LG_KLEN		LG_NPARTS+INTSIZE	/* total key length */
+
+/* erase file record definition */
+#define LG_FNAME	LG_PREVLEN+INTSIZE	/* directory path name */
+
+
+/* rename file record definition */
+#define LG_OLEN		LG_PREVLEN+INTSIZE	/* length of old filename */
+#define LG_NLEN		LG_OLEN+INTSIZE		/* length of new filename */
+#define LG_ONAME	LG_NLEN+INTSIZE		/* old filename */
+
+
+/* open and close file record definition */
+#define LG_ISFD		LG_PREVLEN+INTSIZE	/* isfd of file */
+#define LG_VARLEN	LG_ISFD+INTSIZE		/* VARLEN flag of file */
+#define LG_FPATH	LG_VARLEN+INTSIZE	/* directory path name */
+
+
+/* create and drop index */
+#define LG_IFLAGS	LG_ISFD+INTSIZE		/* key flags */
+#define LG_INPARTS	LG_IFLAGS+INTSIZE	/* number of key parts */
+#define LG_IKLEN	LG_INPARTS+INTSIZE	/* total key length */
+
+
+/* set unique id */
+#define LG_UNIQID	LG_ISFD+INTSIZE		/* new unique id */
+
+
+/* before or after image record definition */
+#define LG_RECNO	LG_ISFD+INTSIZE		/* record number */
+#define LG_IMGLEN	LG_RECNO+LONGSIZE	/* record image length */
+#define LG_RECORD	LG_IMGLEN+INTSIZE	/* record data */
+
+
+/* update image (before and after together) */
+#define LG_BEFLEN	LG_RECNO+LONGSIZE	/* before image length */
+#define LG_AFTLEN	LG_BEFLEN+INTSIZE	/* after  image length */
+#define LG_BUPDATE	LG_AFTLEN+INTSIZE	/* before image for update */
+
+/* savepoint record */
+#define LG_SAVEPT	LG_PREVLEN+INTSIZE	/* savepoint number */
+#define LG_SSIZE	LG_SAVEPT+INTSIZE	/* record size */
+
+/* log memo record */
+#define LG_LOCATION	LG_PREVLEN+INTSIZE
+#define LG_ISERRNO	LG_LOCATION+LONGSIZE
+#define LG_ERRNO	LG_ISERRNO+INTSIZE
+#define LG_ISERRIO	LG_ERRNO+INTSIZE
+#define LG_ISSTAT1	LG_ISERRIO+INTSIZE
+#define LG_ISSTAT2	LG_ISSTAT1+1
+#define LG_ISSTAT3	LG_ISSTAT2+1
+#define LG_ISSTAT4	LG_ISSTAT3+1
+#define LG_TEXT		LG_ISSTAT4+1	
+
+#define LG_PAGESIZE	4096			/* default log buff size */
+
+/* log record types */
+#define LG_ERROR	0		/* log read or write error */
+#define LG_BEGWORK	1		/* BEGIN WORK */
+#define LG_COMWORK	2		/* COMMIT WORK */
+#define LG_ROLWORK	3		/* ROLLBACK WORK */
+#define LG_DELETE	4		/* deleted record */
+#define LG_INSERT	5		/* newly inserted record */
+#define LG_UPDATE	6		/* updated record */
+#define LG_VERSION	7		/* version */
+#define LG_SVPOINT	8		/* savepoint */
+#define LG_FOPEN	9		/* open file */
+#define LG_FCLOSE	10		/* close file */
+#define LG_CKPOINT	11		/* checkpoint */
+#define LG_BUILD	12		/* build new file */
+#define LG_ERASE	13		/* erase old file */
+#define LG_RFORWARD	14		/* ROLLFORWARD */
+#define LG_CINDEX	15		/* create index */
+#define LG_DINDEX	16		/* drop index */
+#define LG_EOF		17		/* end of log file */
+#define LG_RENAME	18		/* rename file */
+#define LG_SETUNIQID	19		/* set unique id */
+#define LG_UNIQUEID	20		/* get unique id */
+#define LG_RBSVPT	21		/* rollback to savepoint */
+#define LG_CLUSIDX      22		/* create cluster index  */
+#define LG_MEMO         23		/* log file memo record */
+
+
+#define TRUE		1
+#define FALSE		0
+
+#define NOPNFL		16
+
+
+/* "smart" recovery flags */
+#define R_NOTRANS	0x01		/* recover records outside of transx */
+#define R_FERRORS	0x02		/* file errors */
+
+/*
+ * recovery opens
+ * iropens is used with is logging
+ * during recovery, it keeps a list of all files open by all processes
+ */
+
+struct iropen
+    {
+    short iro_risfd;				/* recovery open isfd */
+    short iro_cnt;				/* recovery - # of txs using */
+    short iro_flag;				/* flags - see below */
+    char *iro_path;				/* dir path for file */
+    struct iropen *iro_next;			/* next in list */
+    };
+
+/* define for iro_flag
+ */
+#define IRO_CURRTX	001			/* is file open for curr tx */
+#define IRO_VARLEN	002			/* file has var len records */
+
+
+struct txlist
+    {
+    int tx_xid;				/* transaction id */
+    int tx_flag;			/* transaction flags */
+    struct xrloc *tx_nextrec;		/* next log rec in transaction */
+    struct txlist *tx_next;		/* next transaction */
+    struct txo	 *tx_opens;		/* open list */
+    };
+
+/* values for tx_flag */
+
+#define TX_BEGWORK	0x1		/* begin work found for transx */
+
+struct xrloc
+    {
+    int xr_logtype;			/* log record type */
+    int xr_size;			/* log record size */
+    IFMX_OFF_T xr_loc;			/* location in log file */
+    struct xrloc *xr_next;		/* next log rec in transaction */
+    };
+
+struct txo
+    {
+    int	txo_ofd;		/* original transactions fd	*/
+    struct iropen *txo_ro;		/* pointer into openefile	*/
+    struct txo *txo_next;
+    };
+
+--------------------------------------------------------
+
+Because of file format differences between this release
+and Version 7.24 (and earlier), this release of C-ISAM
+cannot read transaction log files that were written in 
+the old format, and older C-ISAM releases cannot read 
+logs in the new format.  
+
+Be careful to follow the Release Notes instructions 
+concerning transaction logs (and other files) when you 
+migrate from an older version to this release, or if 
+you need to revert to an older version.
+
+
+Localized Indexes
+-----------------
+Page E-5 asserts that the CLIENT_LOCALE environment 
+variable should be set to the value that LC_COLLATE 
+specified when a localized index was built.  But the
+current GLS library no longer supports LC_COLLATE.
+
+You must set the CLIENT_LOCALE to the locale that was 
+used when the localized index was created.  If some
+collation other than the codeset order of this locale
+is required, you must specify it in the COLLATION 
+category of the locale file that CLIENT_LOCALE specifies.
+(See Appendix A of "Informix Guide to GLS Functionality"
+for more information about the COLLATION category.
+
+
+No other problems are known to exist with this manual.
+
+
+
+
+ 

@@ -1,0 +1,31 @@
+# Docker ignore file for CISAM project
+# Exclude unnecessary files from Docker build context
+
+# Build artifacts
+demo/build/
+*.o
+*.a
+
+# Data files
+*.dat
+*.idx
+*.rec
+recovery.log
+
+# Git files
+.git/
+.gitignore
+
+# Documentation (optional, comment out if you want to include)
+# *.md
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

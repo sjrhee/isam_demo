@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  cisam-demo:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: cisam-demo:latest
+    container_name: cisam-demo-container
+
+    # Interactive mode
+    stdin_open: true
+    tty: true
+
+    # Mount volume to persist data files
+    volumes:
+      - cisam-data:/app/data
+
+    # Environment variables (if needed)
+    environment:
+      - TERM=xterm-256color
+
+    # Default command
+    command: /bin/bash
+
+volumes:
+  cisam-data:
+    driver: local

@@ -1,0 +1,265 @@
+ 
+                 ===========================================
+                               RELEASE NOTES
+                                    FOR
+                     IBM INFORMIX C-ISAM Version 7.26.FC3 
+                         PRODUCT RELEASE DATE:  DATE: 11 Jun 2008
+                 ===========================================
+ 
+
+TABLE OF CONTENTS
+
+I.  NEW FEATURES IN INFORMIX C-ISAM VERSION 7.26 
+    A. Improved Deadlock Handling
+    B. Link Compatibilty with ESQL/C and  4GL Tools 
+    C. Enhancements to C-ISAM Function Library
+          1. Changes to ldfltnull() Function
+
+II. INSTALLATION AND REVERSION
+    A. Migration to C-ISAM 7.26
+    B. Reversion to Earlier Release Versions
+
+III. CAVEATS
+    A. Incompatibility with Earlier Transaction Logs
+    B. ROWID and Indexes 
+
+IV. DEFECTS FIXED IN THIS RELEASE
+    A. Software Defects
+
+ ----------------------------------------------------
+
+
+I.  NEW FEATURES IN INFORMIX C-ISAM VERSION 7.26 
+
+Indexed Sequential Access Method (ISAM) file management 
+technology was the predecessor to today's RDBMS, and it 
+continues to be a viable environment for many companies.
+It provides fast and efficient access to data, because 
+it does not require the overhead of an RDBMS layer.
+
+IBM Informix C-ISAM Version 7.26 expands storage capabilities 
+of existing C-ISAM applications without requiring changes 
+to the applications.  Applications created for earlier
+versions of C-ISAM must be recompiled, however, before 
+they can use the new Version 7.26 features.
+
+A. Improved Deadlock Handling
+
+C-ISAM version 7.26.FC3 provides improved deadlock handling.  
+ 
+In previous versions of C-ISAM, deadlock handling involved a retry
+loop combined with a 1 second delay. This process could hinder 
+concurrency and cause unnecessary delays in returning the resultant 
+locking failure to the calling process. The new deadlock handling 
+mechanism immediately returns the error for processing in the 
+calling procedure and the process releases the locks it already 
+has and allows the other process caught in the deadlock to proceed.
+
+NOTE: With the improved deadlock handling mechanism, a lock error 
+should be returned much quicker. To distinguish between a simple 
+lock conflict and a deadlock, you must check the operating system 
+error. An ISAM lock error is always identified as ELOCKED; an 
+ISAM deadlock error is always identified as EDEADLK.  
+
+
+You can still implement the deadlock handling from earlier ISAM 
+versions by re-setting the following environment variables to 
+pre-7.26.FC3 values.
+
+ISAM_DEADLOCK_COUNT=n
+Sets the number of retry loops. 
+The 7.26.FC3 default is 0; the pre-7.26.FC3 default is 10.  
+ 
+
+ISAM_DEADLOCK_SLEEP=n
+The number of milliseconds to sleep before retrying. 
+The 7.26.FC3 default value is 0; the pre-7.26.FC3 default value 
+is 1000 (1 second). 
+
+Note that a sleep time of 0 yields the CPU, which is appropriate in 
+a multiprocessor environment. Set the value to -1 for no sleep 
+and no yield.
+
+B. Link Compatibilty with ESQL/C and 4GL Tools
+
+The C-ISAM libraries libifisam.so and libifisam.a, that 
+are being shipped with this release of the product, will 
+be link compatible with ESQL/C and 4GL Tools
+libraries. For this feature to work, an installation
+of ESQL/C and 4GL Tools is necessary.
+
+The description of the C-ISAM libaries being shipped with
+this release is given below:
+
+1. libisam.a
+============
+This library is being provided for reasons of backward 
+compatibilty and will not be link compatible with 
+the libraries of other IBM products listed above.
+
+2. libifisam.a
+==============
+This static library will be link compatible with the 
+libraries of other IBM products mentioned above.
+
+3. libifisam.so
+===============
+This dynamic library will also be link compatible with the 
+libraries of other IBM products mentioned above.
+
+4. libifisamx.so
+================
+It will be possible to build C-ISAM applications by linking
+this library with libifisam.so or libifisam.a.
+
+The libraries, libifisam.a, libifisam.so and libifisamx.so
+cannot be used individually...
+
+libifisam.a needs to be linked using "esql" or "c4gl"
+libifisam.so needs to be linked using "esql" or "c4gl"
+OR
+libifisam.so needs to be linked with libifisamx.so
+libifisam.a needs to be linked with libifisamx.so
+
+C. Enhancements to C-ISAM Function Library
+
+To avoid a potential compile-time error, the following
+change has been made to the C-ISAM library.
+
+1. New Prototype for the ldfltnull() Function
+
+In previous versions of C-ISAM, the ldfltnull()
+function in the isam.h file had this prototype:
+
+double ldfltnull(char *location, short *nullflag);
+
+The prototype of the function ldfltnull()
+has been changed to the following in this release:
+
+float ldfltnull(char *location, short *nullflag);
+
+
+II. INSTALLATION AND REVERSION
+
+If you do not have any version of C-ISAM on your system,
+you can install C-ISAM 7.26 by running the installation
+script and following the prompts.
+
+If some earlier C-ISAM version is present, you also need
+to follow the steps in the next section.
+
+
+A. Migration to C-ISAM 7.26
+
+This release is a seamless upgrade for C-ISAM Version 7.2x
+customers. There are no API changes from the previous
+version of C-ISAM, and no changes in the formats of index
+files, data files, or audit trail files for the following
+migrations:
+
+o  Migrating from a 32-bit C-ISAM to a 64-bit implementation
+   of Version 7.26.
+
+o  Migrating from a 32-bit C-ISAM to a 32-bit implementation
+   that uses special APIs to access files larger than two
+   gigabytes ((2^31) - 1 bytes).
+
+Because of the changes in the transaction log file format,
+carried out in the 7.25 release, this version cannot open 
+transaction log files that contain transaction records
+in the legacy format of releases preceding the 7.25 release.
+
+To install C-ISAM 7.26 on a system that has files created
+by an earlier release of C-ISAM, follow these steps:
+
+1. Make sure that no programs are using the C-ISAM files.
+
+2. Back up all the index, data, transaction log, and audit
+   trail files.
+
+3. Re-create the transaction log file as an empty file of
+   size zero bytes.
+
+4. Recompile the applications with 7.26 C-ISAM.
+
+As previously noted, C-ISAM applications that were created
+with earlier versions must be recompiled before they can
+take advantage of the new features of Version 7.26.
+
+
+B. Reversion to Earlier Release Versions
+
+1. Make sure that no programs are using the C-ISAM files.
+
+2. Back up all the index, data, transaction log, and audit
+   trail files.
+
+3. Re-create the transaction log file as an empty file
+   of size zero bytes.
+
+4. Recompile the applications with the earlier C-ISAM.
+
+You cannot revert to an older version preceding the 7.25
+release after a data file, index file, audit trail file,
+or transaction log file grows beyond the legacy size 
+limit of 2147483647 bytes.
+
+
+III. CAVEATS
+
+A. Incompatibility with Earlier Transaction Logs
+
+Because of file format differences between this release
+and Version 7.24 (and earlier), it is not possible for
+C-ISAM 7.26 to recover data from a transaction log file
+that was created using older versions of C-ISAM.
+This version of C-ISAM cannot read transaction log files
+that were written in the old format, and older C-ISAM
+releases cannot read transaction logs in the new format.
+
+An application built with 7.26 C-ISAM detects an
+incompatibility and issues an error -21502 (ELOGINCOMPAT)
+if it tries to open a transaction log file that was
+created using older versions of C-ISAM.
+
+Use of versions of the bcheck utility (or of the dblog
+utility) that were provided with C-ISAM Version 7.24 or
+earlier is not supported for files created by this release.
+Similarly, the use of versions of bcheck or dblog that were
+provided with INFORMIX-SE Version 7.24 or earlier is not
+supported for files created with this release of C-ISAM.
+
+Any transaction log file that combines records in both the
+old and new formats is unreadable by any C-ISAM version,
+and therefore cannot be used to recover data. If an older
+version of C-ISAM or INFORMIX-SE writes legacy-format
+records into a Version 7.26 transaction log, then that
+log file becomes corrupt.
+
+
+B. ROWID and Indexes
+
+These are still 4 bytes, as in all earlier releases.
+
+
+IV. DEFECTS FIXED IN THIS RELEASE
+
+A.  Software Defects
+
+The following software defects are fixed in this release of C-ISAM:
+
+NUMBER         SHORT DESCRIPTION
+=======        ================================
+
+IC54780        CISAM HITS MAXIMUM TREE DEPTH LIMIT OF 10 AND FAILS OR SEGVs
+ 
+IC56023        iswrite does not return an error code when the variable length file goes                           over 16GB
+
+IC56377        The write lock in isclose() is not required and hinders performance
+
+IC56642        The deadlock handling code around fcntl() does not work well with many 
+               processes competing for the same lock 
+
+
+(C) Copyright IBM Corp. 1994, 2008
+

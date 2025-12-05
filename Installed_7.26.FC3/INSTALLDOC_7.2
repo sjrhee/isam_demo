@@ -1,0 +1,60 @@
+
+
+                      =================================
+                            DOCUMENTATION NOTES
+                                    FOR
+                     UNIX Products Installation Guide 7.26.FC3
+                                DATE: 11 Jun 2008     
+                      =================================
+
+
+Table of Contents
+
+I.    Overview of INSTALLDOC_7.2
+
+II.   UNIX Products Installation Guide
+
+      A. Using 7.2+ relay module with a 5.x client
+      B. Role-Separation Installation Script
+     
+            ===============================
+
+
+
+
+I.      OVERVIEW OF INSTALLDOC_7.2
+
+        INSTALLDOC_7.2 describes messages not covered in the manuals or 
+        modified since publication. Please examine this file. It contains 
+        vital information about new or modified installation instructions.
+
+
+            ===============================
+
+
+
+II.   UNIX Products Installation Guide
+
+      A. Using 7.2+ relay module with a 5.x client
+
+         For 7.2+ products, the message files have been moved from
+         the $INFORMIXDIR/msg to subdirectories within $INFORMIXDIR/msg.  
+
+         To use the 7.2+ relay module with a 5.x client,
+         the 7.2+ product needs to be installed in the same 
+         INFORMIXDIR directory as the 5.x product.
+
+         If for some reason the 7.2+ product cannot be installed in 
+         the 5.x product directory, manually copy or create a symbolic link 
+         of the subdirectories from the 7.2+ $INFORMIXDIR/msg/ directory
+         to the 5.x $INFORMIXDIR/msg/ directory. 
+
+      B. Role-Separation Installation Script
+
+         Informix automatically sets the user logins of 
+         DBSSO and AAO to informix. No prompt is displayed. 
+
+       
+
+            =============================== 
+

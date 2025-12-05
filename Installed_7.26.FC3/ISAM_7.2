@@ -1,0 +1,35 @@
+                      =================================
+                            MACHINE SPECIFIC NOTES
+                                    FOR
+                C-ISAM 7.26.FC3 PRODUCT RELEASE ON Linux x86 RHEL4 64bit
+                               DATE: 11 Jun 2008
+                      =================================
+
+PORT NUMBER: 204072(CD), 204073(ED)
+IRIS JOB NUMBER: 47062
+
+
+Machine Specific Notes:
+=======================
+ 
+1. This release of C-ISAM is built on Linux Kernel 2.6.9-34.ELsmp on x86_64 
+   and Glibc glibc-2.3.2-95.27 and certified on RHEL 5 2.6.18-8.el5xen 
+
+   This product is built with gcc compiler version 3.4.5 on 
+   Red Hat Linux 3.4.5-2.
+ 
+2. This release supports C-ISAM files (index files, data files, transaction
+   files and audit trail files) of size greater than 2GB using special
+   APIs which are described in the operating system man pages
+ 
+3. Refer to the information provided in the release notes in order
+   to migrate to this version of C-ISAM.
+ 
+4. Ensure that the "ulimit" value is set appropriately so that
+   files of size greater than 2GB can be created by C-ISAM.
+
+5. When building applications using the dynamic C-ISAM libraries provided
+   with this release, the C compiler options "-fwritable-strings -fpic 
+   -fomit-frame-pointer" need to be used.
+
+(C) Copyright IBM Corp. 1994, 2008.

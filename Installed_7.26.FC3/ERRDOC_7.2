@@ -1,0 +1,53 @@
+                      =================================
+                            DOCUMENTATION NOTES
+                                    FOR
+                     Informix Error Messages 7.26.FC3 
+                               DATE: 11 Jun 2008
+                      =================================
+
+
+Table of Contents
+
+I.    Overview of ERRDOC_7.2
+
+II.   Informix Error Messages
+
+            ===============================
+
+
+
+
+I.      OVERVIEW OF ERRDOC_7.2
+
+        ERRDOC_7.2 describes messages not covered in the manual or modified 
+        since publication. Please examine this file. It contains vital 
+        information about new or modified error messages.
+
+
+            ===============================
+
+
+
+II.     Informix Error Messages
+
+        Two new error messages are introduced in this release.
+
+        ERROR   DESCRIPTION
+        =====   ===========
+        -21501  ISAM error:  Record Overflow : Unable to Insert a Row.
+                SE/C-ISAM was unable to insert a row because the file
+                already contains  2^31 -1 (2147483647) rows.
+                You have reached the maximum number of rows for this
+                file.  Delete some rows before you add more rows.
+
+        -21502  ISAM error:  Incompatible log file format.
+                The transaction log file format is incompatible with
+                the SE/C-ISAM version being used.  This could be
+                because the transaction log file was created using
+                an older version of SE/C-ISAM.
+                Ensure that the transaction log file is used by the 
+                same version of SE/C-ISAM that created it, so that
+                the log file format is compatible.
+
+
+              =============================== 

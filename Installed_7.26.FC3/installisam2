@@ -1,0 +1,102 @@
+: '
+: *************************************************************************
+:
+:		INTERNATIONAL BUSINESS MACHINES CORPORATION
+: 
+:			      PROPRIETARY DATA
+: 
+:	THIS DOCUMENT CONTAINS TRADE SECRET DATA WHICH IS THE PROPERTY OF 
+:	IBM CORPORATION.  THIS DOCUMENT IS SUBMITTED TO RECIPIENT IN
+:	CONFIDENCE.  INFORMATION CONTAINED HEREIN MAY NOT BE USED, COPIED OR 
+:	DISCLOSED IN WHOLE OR IN PART EXCEPT AS PERMITTED BY WRITTEN AGREEMENT 
+:	SIGNED BY AN OFFICER OF IBM CORPORATION.
+:
+:	THIS MATERIAL IS ALSO COPYRIGHTED AS AN UNPUBLISHED WORK UNDER
+:	SECTIONS 104 AND 408 OF TITLE 17 OF THE UNITED STATES CODE. 
+:	UNAUTHORIZED USE, COPYING OR OTHER REPRODUCTION IS PROHIBITED BY LAW.
+:
+:
+:  Title:	installisam2
+:  Sccsid:	@(#)installisam2	9.6	1/31/94  14:55:22
+:  Description:	Installation Script
+:		Derived from 7.2
+:	usage: installisam2 < files_list
+:
+:  ignores blank lines and lines starting with #, DISK, PRODUCT, 
+:  space, or tab
+:  
+: **********************************************************************
+: '
+
+# For format of files_list files refer to bin/fileslist.doc
+
+if test "x$1" = "x"
+then
+     echo "Usage: install files_list"
+     exit 1
+fi
+FILELIST=$1
+
+# Get product name
+grep "^PRODUCT" $FILELIST > _product
+read keywd PRODUCT < _product
+rm -f _product
+
+SERNUM="AAA#B000000"
+KEY="NOZDIP"
+
+USERCODE=`echo $SERNUM | sed -e 's-^....--' | sed -e 's-......$--'`
+LIMIT=true; EVAL=false; SINGLUSR=false
+case $USERCODE in
+    I | O | N )
+        	echo "WARNING:  This is an invalid serial number.";
+		echo "          Exiting install program.";
+		exit 1;;
+    * )		;;
+esac
+
+echo " "
+echo "WARNING!"
+echo "        This software, and its authorized use and number of users, are"
+echo "subject to the applicable license agreement with Informix Software, Inc."
+echo "If the number of users exceeds the licensed number, the excess users may"
+echo "be prevented from using the software.  UNAUTHORIZED USE OR COPYING MAY"
+echo "SUBJECT YOU AND YOUR COMPANY TO SEVERE CIVIL AND CRIMINAL LIABILITIES."
+
+echo '
+Press RETURN to continue,
+or the interrupt key (usually CTRL-C or DEL) to abort.
+'
+
+read I
+
+
+while read LINE
+    do
+    case $LINE
+	in
+	\#* | "" | " "* | "	"* | DISK* | PRODUCT* )
+	    continue
+	    ;;
+	esac
+    set $LINE
+    NAM=$1; OWN=$2; GRP=$3; MOD=$4; FLG=$5
+    case $FLG
+	in
+	BRAND )
+	    ./brand  -n -s $SERNUM $KEY $NAM
+	    if test $? -ne 0
+	    then
+		echo "Installation of $PRODUCT failed."
+		exit 1
+	    fi
+	    ;;
+	esac
+    chmod $MOD $NAM
+done < $FILELIST
+# Since above while loop is executed in subshell, need to exit script if
+# there were any errors.
+if test $? -ne 0
+then 
+     exit 1
+fi

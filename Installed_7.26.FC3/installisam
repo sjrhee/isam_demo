@@ -1,0 +1,248 @@
+: '
+: *************************************************************************
+:
+:		INTERNATIONAL BUSINESS MACHINES CORPORATION 
+: 
+:			      PROPRIETARY DATA
+: 
+:	THIS DOCUMENT CONTAINS TRADE SECRET DATA WHICH IS THE PROPERTY OF 
+:	IBM CORPORATION.  THIS DOCUMENT IS SUBMITTED TO RECIPIENT IN
+:	CONFIDENCE.  INFORMATION CONTAINED HEREIN MAY NOT BE USED, COPIED OR 
+:	DISCLOSED IN WHOLE OR IN PART EXCEPT AS PERMITTED BY WRITTEN AGREEMENT 
+:	SIGNED BY AN OFFICER OF IBM CORPORATION.
+:
+:	THIS MATERIAL IS ALSO COPYRIGHTED AS AN UNPUBLISHED WORK UNDER
+:	SECTIONS 104 AND 408 OF TITLE 17 OF THE UNITED STATES CODE. 
+:	UNAUTHORIZED USE, COPYING OR OTHER REPRODUCTION IS PROHIBITED BY LAW.
+:
+:
+:  Title:	installisam
+:  Sccsid:	@(#)installisam	9.6	1/27/94  11:03:10
+:  Description:	Installation Script for C-ISAM
+:
+:		This script moves libraries to /usr/lib, headers
+:		to /usr/include, binaries to /usr/bin, and
+:		localization files to /usr/gls.
+:		It must be run by super-user.
+:		
+:		Derived from 7.2
+: **********************************************************************
+: '
+
+: set shell variables for the files that will be moved around and their
+: default target directories
+
+BIN='bcheck dblog glfiles'
+BINDIR='/usr/bin'
+
+LIB='*lib*isam*.* llib-lisam'
+SHLIB='*libifisam*.s*'
+LIBDIR=''
+
+INCL='isam.h decimal.h'
+INCLDIR='/usr/include'
+
+GLS='gls'
+GLSDIR='/usr'
+
+: see if there is a ranlib to use
+
+if test -s /bin/ranlib
+    then
+    RANLIB=/bin/ranlib
+elif test -s /usr/bin/ranlib
+    then
+    RANLIB=/usr/bin/ranlib
+else
+    RANLIB=
+fi
+
+: output the CISAM version and copyright notice 
+
+cat CISAM-cr
+
+echo '
+
+Installation Script
+
+This installation procedure must be run by root (super-user).
+It will change the mode of all files of this package in this 
+directory.  
+'
+
+echo install >__install__
+chown root __install__ 2> /dev/null
+
+if test $? -ne 0
+    then
+    echo '
+Please rerun this installation procedure as super-user.
+'
+    rm __install__
+    exit 1
+fi
+
+: 'Need another test for Sys 5 since chown is valid for files you own'
+#
+# The owner of __install__ is root now. The chmod 4755 is used to
+# test whether the user is root.
+#
+chmod 4755 __install__ 2> /dev/null
+
+if test $? -ne 0
+then
+    echo '
+Please rerun this installation procedure as super-user.
+'
+    rm -f __install__
+    exit 1
+fi
+
+rm __install__
+
+echo '
+Press RETURN to continue,
+or the interrupt key (usually CTRL-C or DEL) to abort.
+'
+read I
+
+: install will first request the serial number and key for this
+: copy of the product.  Then is will read the list of files found in 
+: isamfiles, and set the permissions for each.
+
+sh installisam2 isamfiles
+if test $? -ne 0
+then
+    exit 1
+fi
+
+: See where the user wants the binary, library, and header files to 
+: go to.  The default is /usr
+
+echo '
+
+The following files will be moved to the appropriate directories.
+
+    Binary files:	bcheck dblog
+    Library files:	*lib*isam*.*, llib-lisam
+    Header files:	isam.h, decimal.h
+    Localization files: ./gls/*
+
+The default target directories for these files are
+
+    Binary files:	/usr/bin
+    Library files:	
+    Header files:	/usr/include
+    Localization files: /usr/gls
+
+You may specify a target location for these files other than "/usr"
+at this time if you so desire.  Do you wish to change the target
+location for the directories?
+'
+
+echo "Enter Y to change target directory or RETURN to continue."
+read RESPONSE
+if test "$RESPONSE" = 'Y' -o "$RESPONSE" = 'y'  
+    then
+    RESPONSE=
+    until test "$RESPONSE" = 'Y' -o "$RESPONSE" = 'y'
+    do
+	echo "Enter new target directory."
+	read TARGETDIR
+	echo "You have selected $TARGETDIR as the new target directory.  "
+	echo "If this is correct enter Y."
+	read RESPONSE
+	if test -d "$TARGETDIR"
+	    then
+	    echo
+	else
+	    echo "The directory $TARGETDIR does not exist."
+	    echo
+	    RESPONSE=
+	fi
+    done
+    BINDIR=$TARGETDIR/bin
+    INCLDIR=$TARGETDIR/include
+    LIBDIR=$TARGETDIR/lib
+    GLSDIR=$TARGETDIR
+else
+    echo "The default target directory of /usr will be used."
+fi
+
+: move the binary, library, and header files around
+
+if test -f $BINDIR
+    then
+    echo "File $BINDIR already exists.  Installation cannot continue."
+    exit 1
+elif test -d $BINDIR
+    then
+    echo "Moving Binaries to $BINDIR"
+    mv $BIN $BINDIR; (cd $BINDIR; chmod 755 $BIN)
+else
+    echo "Making $BINDIR"
+    mkdir $BINDIR
+    chmod 755 $BINDIR
+    echo "Moving Binaries to $BINDIR"
+    mv $BIN $BINDIR; (cd $BINDIR; chmod 755 $BIN)
+fi
+
+if test -f $LIBDIR
+    then
+    echo "File $LIBDIR already exists.  Installation cannot continue."
+    exit 1
+elif test -d $LIBDIR
+    then
+    echo "Moving Libraries to $LIBDIR"
+    mv $LIB $LIBDIR; (cd $LIBDIR; chmod 644 $LIB; chmod 755 $SHLIB)
+else
+    echo "Making $LIBDIR"
+    mkdir $LIBDIR
+    chmod 755 $LIBDIR
+    echo "Moving Libraries to $LIBDIR"
+    mv $LIB $LIBDIR; (cd $LIBDIR; chmod 644 $LIB; chmod 755 $SHLIB)
+fi
+
+: ranlib the library if possible 
+
+if test "$RANLIB" != ""
+then
+    $RANLIB $LIBDIR/*lib*isam*.a
+    $RANLIB $LIBDIR/libisamnls.a
+fi
+
+if test -f $INCLDIR
+    then
+    echo "File $INCLDIR already exists.  Installation cannot continue."
+    exit 1
+elif test -d $INCLDIR
+    then
+    echo "Moving Headers to $INCLDIR"
+    mv $INCL $INCLDIR; (cd $INCLDIR; chmod 644 $INCL)
+else
+    echo "Making $INCLDIR"
+    mkdir $INCLDIR
+    chmod 755 $INCLDIR
+    echo "Moving Headers to $INCLDIR"
+    mv $INCL $INCLDIR; (cd $INCLDIR; chmod 644 $INCL)
+fi
+
+if test -f $GLSDIR/$GLS
+    then
+    echo "File $GLSDIR/$GLS already exists.  Installation cannot continue."
+    exit 1
+elif test -d $GLSDIR/$GLS
+    then
+    echo "Moving Localization files to $GLSDIR/$GLS"
+    cp -r $GLS $GLSDIR
+else
+    echo "Moving Localization files to $GLSDIR/$GLS"
+    cp -r $GLS $GLSDIR
+    chmod 755 $GLSDIR
+fi
+
+
+echo "
+C-ISAM Installation Complete.
+
+"
