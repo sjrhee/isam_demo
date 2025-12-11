@@ -1,17 +1,17 @@
 /***************************************************************************
  *
- *		  INTERNATIONAL BUSINESS MACHINES CORPORATION 
+ *		  INTERNATIONAL BUSINESS MACHINES CORPORATION
  *
  *			      PROPRIETARY DATA
  *
- *	THIS DOCUMENT CONTAINS TRADE SECRET DATA WHICH IS THE PROPERTY OF 
+ *	THIS DOCUMENT CONTAINS TRADE SECRET DATA WHICH IS THE PROPERTY OF
  *	IBM CORPORATION.  THIS DOCUMENT IS SUBMITTED TO RECIPIENT IN
- *	CONFIDENCE.  INFORMATION CONTAINED HEREIN MAY NOT BE USED, COPIED OR 
- *	DISCLOSED IN WHOLE OR IN PART EXCEPT AS PERMITTED BY WRITTEN AGREEMENT 
+ *	CONFIDENCE.  INFORMATION CONTAINED HEREIN MAY NOT BE USED, COPIED OR
+ *	DISCLOSED IN WHOLE OR IN PART EXCEPT AS PERMITTED BY WRITTEN AGREEMENT
  *	SIGNED BY AN OFFICER OF IBM CORPORATION.
  *
  *	THIS MATERIAL IS ALSO COPYRIGHTED AS AN UNPUBLISHED WORK UNDER
- *	SECTIONS 104 AND 408 OF TITLE 17 OF THE UNITED STATES CODE. 
+ *	SECTIONS 104 AND 408 OF TITLE 17 OF THE UNITED STATES CODE.
  *	UNAUTHORIZED USE, COPYING OR OTHER REPRODUCTION IS PROHIBITED BY LAW.
  *
  *  C-ISAM  --  Indexed Sequential Access Method
@@ -39,48 +39,48 @@ int fdemploy, fdperform;
 
 main()
 {
-int cc;
-fdemploy = cc = isopen("employee", ISINOUT + ISEXCLLOCK);
-if (cc < SUCCESS)
+   int cc;
+   fdemploy = cc = isopen("employee", ISINOUT + ISEXCLLOCK);
+   if (cc < SUCCESS)
    {
-   printf("isopen error %d for employee file\n", iserrno);
-   exit(1);
+      printf("isopen error %d for employee file\n", iserrno);
+      exit(1);
    }
 
-/* Set up Last Name Key */
-lnkey.k_flags = ISDUPS + COMPRESS;
-lnkey.k_nparts = 1;
-lnkey.k_part[0].kp_start = 4;
-lnkey.k_part[0].kp_leng = 20;
-lnkey.k_part[0].kp_type = CHARTYPE;
+   /* Set up Last Name Key */
+   lnkey.k_flags = ISDUPS + COMPRESS;
+   lnkey.k_nparts = 1;
+   lnkey.k_part[0].kp_start = 4;
+   lnkey.k_part[0].kp_leng = 20;
+   lnkey.k_part[0].kp_type = CHARTYPE;
 
-cc = isaddindex(fdemploy, &lnkey);
-if (cc != SUCCESS)
+   cc = isaddindex(fdemploy, &lnkey);
+   if (cc != SUCCESS)
    {
-   printf("isaddindex error %d for employee lname key\n", iserrno);
-   exit(1);
+      printf("isaddindex error %d for employee lname key\n", iserrno);
+      exit(1);
    }
-isclose(fdemploy);
+   isclose(fdemploy);
 
-fdperform = cc = isopen("perform", ISINOUT + ISEXCLLOCK);
-if (cc < SUCCESS)
+   fdperform = cc = isopen("perform", ISINOUT + ISEXCLLOCK);
+   if (cc < SUCCESS)
    {
-   printf("isopen error %d for performance file\n", iserrno);
-   exit(1);
+      printf("isopen error %d for performance file\n", iserrno);
+      exit(1);
    }
 
-/* Set up Salary Key */
-skey.k_flags = ISDUPS;
-skey.k_nparts = 1;
-skey.k_part[0].kp_start = 11;
-skey.k_part[0].kp_leng = sizeof(double);
-skey.k_part[0].kp_type = DOUBLETYPE;
+   /* Set up Salary Key */
+   skey.k_flags = ISDUPS;
+   skey.k_nparts = 1;
+   skey.k_part[0].kp_start = 11;
+   skey.k_part[0].kp_leng = sizeof(double);
+   skey.k_part[0].kp_type = DOUBLETYPE;
 
-cc = isaddindex(fdemploy, &skey);
-if (cc != SUCCESS)
+   cc = isaddindex(fdemploy, &skey);
+   if (cc != SUCCESS)
    {
-   printf("isaddindex error %d for perform sal key\n", iserrno);
-   exit(1);
+      printf("isaddindex error %d for perform sal key\n", iserrno);
+      exit(1);
    }
-isclose(fdperform);
+   isclose(fdperform);
 }

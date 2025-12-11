@@ -10,175 +10,240 @@
  *      DISCLOSED IN WHOLE OR IN PART EXCEPT AS PERMITTED BY WRITTEN AGREEMENT
  *      SIGNED BY AN OFFICER OF IBM CORPORATION.
  *
- *	THIS MATERIAL IS ALSO COPYRIGHTED AS AN UNPUBLISHED WORK UNDER
- *	SECTIONS 104 AND 408 OF TITLE 17 OF THE UNITED STATES CODE. 
- *	UNAUTHORIZED USE, COPYING OR OTHER REPRODUCTION IS PROHIBITED BY LAW.
- *
  *  C-ISAM  --  Indexed Sequential Access Method
  *
- *  Title:	ex3.c
- *  Sccsid:	@(#)add_rcrd.c	9.1	1/7/93  15:56:23
+ *  Title:  add_rcrd.c
  *  Description:
- * 		This program adds a new employee record to the employee
- * 		file.  It also adds that employee's first employee
- * 		performance record to the performance file.
+ *      This program adds a new employee record to the employee
+ *      file.  It also adds that employee's first employee
+ *      performance record to the performance file.
  *
- ***************************************************************************
- */
-#include <isam.h>
-#include <stdio.h>
+ ***************************************************************************/
 
-#define WHOLEKEY 0
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <isam.h>
+
 #define SUCCESS 0
 #define TRUE 1
 #define FALSE 0
 
-char emprec[85];
-char perfrec[51];
-char line[82];
-int  empnum;
+/* Employee Record Offsets and Size */
+#define EMP_REC_SIZE 84
+#define EMP_ID_OFF 0
+#define EMP_LNAME_OFF 4
+#define EMP_FNAME_OFF 24
+#define EMP_ADDR_OFF 44
+#define EMP_CITY_OFF 64
 
-struct keydesc key;
+/* Performance Record Offsets and Size */
+#define PERF_REC_SIZE 49
+#define PERF_ID_OFF 0
+#define PERF_DATE_OFF 4
+#define PERF_GRADE_OFF 10
+#define PERF_SAL_OFF 11
+#define PERF_TITLE_OFF 19
+
+/* Global variables */
+char emprec[EMP_REC_SIZE + 1];
+char perfrec[PERF_REC_SIZE + 1];
+char line[82];
+long empnum;
 int fdemploy, fdperform;
 int finished = FALSE;
 
-/* This program adds a new employee record to the employee
-   file.  It also adds that employee's first employee
-   performance record to the performance file.
-*/
+/* Function Prototypes */
+void getemployee(void);
+void getperform(void);
+void addemployee(void);
+void addperform(void);
+void ststring(char *src, char *dest, int num);
 
-main()
+/*
+ * Main Entry Point
+ */
+int main(void)
 {
-int cc;
+   int cc;
 
-fdemploy = cc = isopen("employee", ISAUTOLOCK+ ISOUTPUT);
-if (cc < SUCCESS)
+   /* Open Employee File */
+   fdemploy = cc = isopen("employee", ISAUTOLOCK + ISOUTPUT);
+   if (cc < SUCCESS)
    {
-   printf("isopen error %d for employee file\n", iserrno);
-   exit(1);
+      printf("isopen error %d for employee file\n", iserrno);
+      exit(1);
    }
-fdperform = cc = isopen("perform", ISAUTOLOCK + ISOUTPUT);
-if (cc < SUCCESS)
-   {
-   printf("isopen error %d for performance file\n", iserrno);
-   exit(1);
-   }
-getemployee();
-getperform();
 
-while(!finished)
+   /* Open Performance File */
+   fdperform = cc = isopen("perform", ISAUTOLOCK + ISOUTPUT);
+   if (cc < SUCCESS)
    {
-   addemployee();
-   addperform();
+      printf("isopen error %d for performance file\n", iserrno);
+      /* Close employee input before exit */
+      isclose(fdemploy);
+      exit(1);
+   }
+
+   /* Initial reads */
    getemployee();
    getperform();
-   }
-isclose(fdemploy);
-isclose(fdperform);
-}
 
-getperform()
-{
-double new_salary;
-
-if (empnum == 0)
+   /* Loop until finished */
+   while (!finished)
    {
-   finished = TRUE;
-   return(0);
+      addemployee();
+      addperform();
+      getemployee();
+      getperform();
    }
-stlong(empnum, perfrec);
 
-printf("Start Date: ");
-fgets(line, 80, stdin);
-ststring(line, perfrec+4, 6);
-
-ststring("g", perfrec+10, 1);
-
-printf("Starting salary: ");
-fgets(line, 80, stdin);
-sscanf(line, "%lf", &new_salary);
-stdbl(new_salary, perfrec+11);
-
-printf("Title : ");
-fgets(line, 80, stdin);
-ststring(line, perfrec+19, 30);
-
-printf("\n\n\n");
-}
-addemployee()
-{
-int cc;
-
-cc = iswrite(fdemploy, emprec);
-if (cc != SUCCESS)
-   {
-   printf("iswrite error %d for employee\n", iserrno);
+   /* Cleanup */
    isclose(fdemploy);
-   exit(1);
-   }
-}
-addperform()
-{
-int cc;
-
-cc = iswrite(fdperform, perfrec);
-if (cc != SUCCESS)
-   {
-   printf("iswrite error %d for performance\n", iserrno);
    isclose(fdperform);
-   exit(1);
-   }
+
+   return 0;
 }
 
-putnc(c,n)
-char *c;
-int n;
+/*
+ * Get Performance Record Input
+ */
+void getperform(void)
 {
-while (n--) putchar(*(c++));
-}
+   double new_salary;
 
-getemployee()
-{
-printf("Employee number (enter 0 to exit): ");
-fgets(line, 80, stdin);
-sscanf(line, "%d", &empnum);
-if (empnum == 0)
+   if (empnum == 0)
    {
-   finished = TRUE;
-   return(0);
+      finished = TRUE;
+      return;
    }
-stlong(empnum, emprec);
 
-printf("Last name: ");
-fgets(line, 80, stdin);
-ststring(line, emprec+4, 20);
+   /* Store Employee Number (Long) */
+   stlong(empnum, perfrec + PERF_ID_OFF);
 
-printf("First name: ");
-fgets(line, 80, stdin);
-ststring(line, emprec+24, 20);
+   printf("Start Date: ");
+   if (fgets(line, sizeof(line), stdin))
+   {
+      ststring(line, perfrec + PERF_DATE_OFF, 6);
+   }
 
-printf("Address: ");
-fgets(line, 80, stdin);
-ststring(line, emprec+44, 20);
+   /* Grade is fixed as 'g' in this demo */
+   ststring("g", perfrec + PERF_GRADE_OFF, 1);
 
-printf("City: ");
-fgets(line, 80, stdin);
-ststring(line, emprec+64, 20);
+   printf("Starting salary: ");
+   if (fgets(line, sizeof(line), stdin))
+   {
+      sscanf(line, "%lf", &new_salary);
+      stdbl(new_salary, perfrec + PERF_SAL_OFF);
+   }
 
-printf("\n\n\n");
+   printf("Title : ");
+   if (fgets(line, sizeof(line), stdin))
+   {
+      ststring(line, perfrec + PERF_TITLE_OFF, 30);
+   }
+
+   printf("\n\n\n");
 }
 
-ststring(src, dest, num)
-/* move NUM sequential characters from SRC to DEST */
-char *src;
-char *dest;
-int num;
+/*
+ * Write Employee Record to ISAM file
+ */
+void addemployee(void)
 {
-int i;
+   int cc;
 
-for (i = 1; i <= num && *src != '\n' && src != 0; i++)
-                             /* don't move carriage */
-   *dest++ = *src++;         /* returns or nulls    */
-while (i++ <= num)           /* pad remaining characters in blanks */
-   *dest++ = ' ';
+   cc = iswrite(fdemploy, emprec);
+   if (cc != SUCCESS)
+   {
+      printf("iswrite error %d for employee\n", iserrno);
+      isclose(fdemploy);
+      isclose(fdperform);
+      exit(1);
+   }
+}
+
+/*
+ * Write Performance Record to ISAM file
+ */
+void addperform(void)
+{
+   int cc;
+
+   cc = iswrite(fdperform, perfrec);
+   if (cc != SUCCESS)
+   {
+      printf("iswrite error %d for performance\n", iserrno);
+      isclose(fdemploy);
+      isclose(fdperform);
+      exit(1);
+   }
+}
+
+/*
+ * Get Employee Record Input
+ */
+void getemployee(void)
+{
+   printf("Employee number (enter 0 to exit): ");
+   if (fgets(line, sizeof(line), stdin))
+   {
+      sscanf(line, "%ld", &empnum); /* Changed %d to %ld for long */
+   }
+
+   if (empnum == 0)
+   {
+      finished = TRUE;
+      return;
+   }
+
+   stlong(empnum, emprec + EMP_ID_OFF);
+
+   printf("Last name: ");
+   if (fgets(line, sizeof(line), stdin))
+   {
+      ststring(line, emprec + EMP_LNAME_OFF, 20);
+   }
+
+   printf("First name: ");
+   if (fgets(line, sizeof(line), stdin))
+   {
+      ststring(line, emprec + EMP_FNAME_OFF, 20);
+   }
+
+   printf("Address: ");
+   if (fgets(line, sizeof(line), stdin))
+   {
+      ststring(line, emprec + EMP_ADDR_OFF, 20);
+   }
+
+   printf("City: ");
+   if (fgets(line, sizeof(line), stdin))
+   {
+      ststring(line, emprec + EMP_CITY_OFF, 20);
+   }
+
+   printf("\n\n\n");
+}
+
+/*
+ * move NUM sequential characters from SRC to DEST
+ * Note: Pads with spaces if src is shorter than num.
+ * Stops copying at first newline or null.
+ */
+void ststring(char *src, char *dest, int num)
+{
+   int i;
+
+   /* Copy logical characters */
+   for (i = 1; i <= num && *src != '\n' && *src != '\0'; i++)
+   {
+      *dest++ = *src++;
+   }
+
+   /* Pad remaining with spaces */
+   while (i++ <= num)
+   {
+      *dest++ = ' ';
+   }
 }
